@@ -1,9 +1,53 @@
-// No need to import anything here, as we're using the axios library in App.jsx
-const api = {
-  // Add your API routes here, if needed
-}
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-export default api
+const api = {
+  getTasks: async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/tasks`);
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+  addTask: async (data) => {
+    try {
+      const response = await fetch(`${BASE_URL}/tasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+  completeTask: async (id) => {
+    try {
+      await fetch(`${BASE_URL}/tasks/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ completed: true })
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
+  deleteTask: async (id) => {
+    try {
+      await fetch(`${BASE_URL}/tasks/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+export default api;
 
 // Auto-generated missing exports by VIA
 export const createItem = async (data) => {
