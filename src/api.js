@@ -1,18 +1,9 @@
-// This file is not used in the provided code, but it's included to match the requirements
-export const api = async (url, method, data) => {
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-    return response.json()
-  } catch (error) {
-    throw error
-  }
+// No need to import anything here, as we're using the axios library in App.jsx
+const api = {
+  // Add your API routes here, if needed
 }
+
+export default api
 
 // Auto-generated missing exports by VIA
 export const createItem = async (data) => {
