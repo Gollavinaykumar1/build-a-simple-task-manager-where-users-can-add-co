@@ -2,75 +2,55 @@
 
 === FILE: src/App.jsx ===
 import React, { useState, useEffect } from 'react';
-import { Link, Routes, Route, HashRouter } from 'react-router-dom';
+import { Routes, Route, HashRouter } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import 'tailwindcss/base.css';
+import 'tailwindcss/components.css';
+import 'tailwindcss/utilities.css';
 import TaskList from './TaskList';
-import TaskForm from './TaskForm';
+import AddTask from './AddTask';
 import api from './api';
 
 function App() {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get('/tasks');
-        setTasks(response.data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTasks();
+    api.getTasks()
+      .then(data => setTasks(data))
+      .catch(error => console.error(error));
   }, []);
 
-  const handleAddTask = async (task) => {
-    try {
-      const response = await api.post('/tasks', task);
-      setTasks([...tasks, response.data]);
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleAddTask = (task) => {
+    api.addTask(task)
+      .then(data => setTasks([...tasks, data]))
+      .catch(error => console.error(error));
   };
 
-  const handleCompleteTask = async (taskId) => {
-    try {
-      const response = await api.patch(`/tasks/${taskId}`, { completed: true });
-      setTasks(tasks.map((task) => task.id === taskId ? response.data : task));
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleCompleteTask = (id) => {
+    api.completeTask(id)
+      .then(() => setTasks(tasks.map(task => task.id === id ? { ...task, completed: true } : task)))
+      .catch(error => console.error(error));
   };
 
-  const handleDeleteTask = async (taskId) => {
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter((task) => task.id !== taskId));
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleDeleteTask = (id) => {
+    api.deleteTask(id)
+      .then(() => setTasks(tasks.filter(task => task.id !== id)))
+      .catch(error => console.error(error));
   };
 
   return (
     <HashRouter>
-      <div className="max-w-md mx-auto p-4 mt-10 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4">Task Manager</h1>
-        <TaskForm handleAddTask={handleAddTask} />
-        {loading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : (
-          <TaskList
-            tasks={tasks}
-            handleCompleteTask={handleCompleteTask}
-            handleDeleteTask={handleDeleteTask}
-          />
-        )}
-      </div>
+      <ToastContainer />
+      <Routes>
+        <Route path="/" element={
+          <div className="container mx-auto p-4 pt-6 mt-10">
+            <h1 className="text-3xl font-bold mb-4">Task Manager</h1>
+            <AddTask onAddTask={handleAddTask} />
+            <TaskList tasks={tasks} onCompleteTask={handleCompleteTask} onDeleteTask={handleDeleteTask} />
+          </div>
+        } />
+      </Routes>
     </HashRouter>
   );
 }
@@ -82,7 +62,9 @@ export default App;
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import './index.css';
+import 'tailwindcss/base.css';
+import 'tailwindcss/components.css';
+import 'tailwindcss/utilities.css';
 
 ReactDOM.render(
   <React.StrictMode>
@@ -99,13 +81,34 @@ ReactDOM.render(
 === END ===
 
 === FILE: src/api.js ===
-import axios from 'axios';
-
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-const api = axios.create({
-  baseURL: BASE_URL,
-});
+const api = {
+  getTasks: async () => {
+    const response = await fetch(`${BASE_URL}/tasks`);
+    return response.json();
+  },
+  addTask: async (task) => {
+    const response = await fetch(`${BASE_URL}/tasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(task)
+    });
+    return response.json();
+  },
+  completeTask: async (id) => {
+    await fetch(`${BASE_URL}/tasks/${id}/complete`, {
+      method: 'PATCH'
+    });
+  },
+  deleteTask: async (id) => {
+    await fetch(`${BASE_URL}/tasks/${id}`, {
+      method: 'DELETE'
+    });
+  }
+};
 
 export default api;
 === END ===
